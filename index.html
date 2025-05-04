@@ -1,208 +1,38 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Supabase Data Viewer</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <style>
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-      max-width: 1000px;
-      margin: 2rem auto;
-      padding: 1rem;
-      background: #f8f9fa;
-      color: #333;
-    }
-    h1 {
-      text-align: center;
-      color: #3d5af1;
-      margin-bottom: 2rem;
-    }
-    .card {
-      background: #ffffff;
-      padding: 1.5rem;
-      border-radius: 8px;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    }
-    .data-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 1rem;
-    }
-    .data-table th {
-      background: #f1f3f5;
-      padding: 12px;
-      text-align: left;
-      font-weight: 600;
-      border-bottom: 2px solid #dee2e6;
-    }
-    .data-table td {
-      padding: 12px;
-      border-bottom: 1px solid #dee2e6;
-      vertical-align: top;
-    }
-    .data-table tr:hover {
-      background: #f8f9fa;
-    }
-    .loader {
-      text-align: center;
-      padding: 2rem;
-      color: #6c757d;
-    }
-    .error {
-      background: #ffe3e3;
-      color: #e03131;
-      padding: 1rem;
-      border-radius: 4px;
-      margin-top: 1rem;
-    }
-    .controls {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 1rem;
-    }
-    .controls input {
-      padding: 8px 12px;
-      border: 1px solid #ced4da;
-      border-radius: 4px;
-      flex-grow: 1;
-      margin-right: 8px;
-    }
-    .controls button {
-      padding: 8px 16px;
-      background: #3d5af1;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    .controls button:hover {
-      background: #364fc7;
-    }
-  </style>
+  <title>Supabase Test</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 </head>
 <body>
-  <h1>Supabase Data Viewer</h1>
-  
-  <div class="card">
-    <div class="controls">
-      <input type="text" id="table-name" placeholder="Table name (default: MSA)" value="MSA">
-      <button id="load-data">Load Data</button>
-    </div>
-    
-    <div id="data-container" class="loader">Loading data...</div>
-  </div>
+  <h2>Supabase Test</h2>
+  <div id="output">Connecting...</div>
 
   <script>
-    // Better to keep these in environment variables or get from backend
-    // CAUTION: Exposing API keys in client-side code is a security risk
+    // Replace these with your actual values
     const SUPABASE_URL = 'https://jtqfbjatqlqhjkxjnixt.supabase.co';
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp0cWZiamF0cWxxaGpreGpuaXh0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxNDA2OTksImV4cCI6MjA2MTcxNjY5OX0.1VuFW1s8YAhZzu8chFHOV2jqT8ucgoNDKzsLQ3Ova_0';
-    
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp0cWZiamF0cWxxaGpreGpuaXh0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxNDA2OTksImV4cCI6MjA2MTcxNjY5OX0.1VuFW1s8YAhZzu8chFHOV2jqT8ucgoNDKzsLQ3Ova_0'; // your anon key
+    const TABLE_NAME = 'MSA';
+
     const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-    const container = document.getElementById('data-container');
-    const tableNameInput = document.getElementById('table-name');
-    const loadButton = document.getElementById('load-data');
-    
-    async function fetchData() {
-      const tableName = tableNameInput.value.trim() || 'MSA';
-      container.className = 'loader';
-      container.textContent = 'Loading data...';
-      
+
+    async function testFetch() {
+      const output = document.getElementById('output');
       try {
-        const { data, error } = await supabase
-          .from(tableName)
-          .select('*')
-          .limit(100);
-        
+        const { data, error } = await supabase.from(TABLE_NAME).select('*').limit(1);
         if (error) {
-          throw new Error(error.message);
+          output.textContent = 'Error: ' + error.message;
+        } else if (data.length === 0) {
+          output.textContent = 'Connected: No data found.';
+        } else {
+          output.textContent = 'Success: ' + JSON.stringify(data[0]);
         }
-        
-        if (!data || data.length === 0) {
-          container.textContent = 'No data found in the table.';
-          return;
-        }
-        
-        displayData(data);
-      } catch (err) {
-        console.error('Error fetching data:', err);
-        container.className = 'error';
-        container.textContent = `Error: ${err.message}`;
+      } catch (e) {
+        output.textContent = 'Exception: ' + e.message;
       }
     }
-    
-    function displayData(data) {
-      container.className = '';
-      
-      // Get all unique keys from data objects
-      const keys = [...new Set(data.flatMap(item => Object.keys(item)))];
-      
-      // Create table
-      const table = document.createElement('table');
-      table.className = 'data-table';
-      
-      // Add header row
-      const headerRow = document.createElement('tr');
-      keys.forEach(key => {
-        const th = document.createElement('th');
-        th.textContent = key;
-        headerRow.appendChild(th);
-      });
-      
-      const thead = document.createElement('thead');
-      thead.appendChild(headerRow);
-      table.appendChild(thead);
-      
-      // Add data rows
-      const tbody = document.createElement('tbody');
-      data.forEach(row => {
-        const tr = document.createElement('tr');
-        
-        keys.forEach(key => {
-          const td = document.createElement('td');
-          let value = row[key];
-          
-          // Format the value based on its type
-          if (value === null || value === undefined) {
-            td.textContent = '-';
-          } else if (typeof value === 'object') {
-            td.textContent = JSON.stringify(value, null, 2);
-          } else {
-            td.textContent = value.toString();
-          }
-          
-          tr.appendChild(td);
-        });
-        
-        tbody.appendChild(tr);
-      });
-      
-      table.appendChild(tbody);
-      
-      // Display row count
-      const countInfo = document.createElement('p');
-      countInfo.textContent = `Displaying ${data.length} rows from table "${tableNameInput.value}"`;
-      
-      // Clear container and add new elements
-      container.innerHTML = '';
-      container.appendChild(countInfo);
-      container.appendChild(table);
-    }
-    
-    // Initial load
-    fetchData();
-    
-    // Add event listener to button
-    loadButton.addEventListener('click', fetchData);
-    
-    // Allow pressing Enter in the input field
-    tableNameInput.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') {
-        fetchData();
-      }
-    });
+
+    testFetch();
   </script>
 </body>
 </html>
