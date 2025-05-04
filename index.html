@@ -5,35 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Supabase Data Viewer</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-  <style>
-    body {
-      font-family: sans-serif;
-      max-width: 800px;
-      margin: 2rem auto;
-      padding: 1rem;
-      background: #f8f9fa;
-    }
-    h1 {
-      text-align: center;
-    }
-    ul {
-      padding-left: 1.2rem;
-    }
-    li {
-      margin-bottom: 0.5rem;
-      background: #ffffff;
-      padding: 0.5rem;
-      border: 1px solid #ddd;
-      border-radius: 5px;
-    }
-  </style>
 </head>
 <body>
   <h1>Supabase Data Viewer</h1>
   <div id="data-container">Loading data...</div>
 
   <script>
-    // 🔁 Replace these values with your actual Supabase info
+    // Replace these values with your actual Supabase info
     const SUPABASE_URL = 'https://jtqfbjatqlqhjkxjnixt.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp0cWZiamF0cWxxaGpreGpuaXh0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxNDA2OTksImV4cCI6MjA2MTcxNjY5OX0.1VuFW1s8YAhZzu8chFHOV2jqT8ucgoNDKzsLQ3Ova_0';
     const TABLE_NAME = 'MSA';
@@ -57,16 +35,12 @@
         return;
       }
 
-      const list = document.createElement('ul');
-
+      let dataString = '';
       data.forEach(row => {
-        const item = document.createElement('li');
-        item.textContent = JSON.stringify(row);
-        list.appendChild(item);
+        dataString += JSON.stringify(row) + '<br>';
       });
 
-      container.textContent = '';
-      container.appendChild(list);
+      container.innerHTML = dataString;
     }
 
     fetchData();
