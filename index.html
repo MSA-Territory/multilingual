@@ -1,25 +1,27 @@
-<!-- index.html in your GitHub repo -->
 <!DOCTYPE html>
 <html>
 <body>
-  <button id="fetchData">Test Secure Connection</button>
-  <pre id="output"></pre>
-  
+  <div id="data"></div>
+
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
   <script>
+    // ️ ️ REPLACE THESE - KEEP QUOTES ️ ️
     const supabase = supabase.createClient(
-      'https://jtqfbjatqlqhjkxjnixt.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp0cWZiamF0cWxxaGpreGpuaXh0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxNDA2OTksImV4cCI6MjA2MTcxNjY5OX0.1VuFW1s8YAhZzu8chFHOV2jqT8ucgoNDKzsLQ3Ova_0' // Only safe with RLS enabled!
-    )
-    
-    document.getElementById('fetchData').addEventListener('click', async () => {
-      const { data, error } = await supabase
-        .from('MSA')
-        .select('*')
-        .limit(5);
+      'https://jtqfbjatqlqhjkxjnixt.supabase.co',  // Your URL
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp0cWZiamF0cWxxaGpreGpuaXh0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxNDA2OTksImV4cCI6MjA2MTcxNjY5OX0.1VuFW1s8YAhZzu8chFHOV2jqT8ucgoNDKzsLQ3Ova_0'   // Your anon key
+    );
+
+    // Fetch data from mombasa table
+    async function loadData() {
+      const { data } = await supabase
+        .from('mombasa')  // ️ No quotes in table name
+        .select('*');
       
-      document.getElementById('output').textContent = JSON.stringify(data, null, 2);
-    });
+      document.getElementById('data').innerHTML = 
+        JSON.stringify(data, null, 2);
+    }
+
+    loadData();
   </script>
 </body>
 </html>
