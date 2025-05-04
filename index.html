@@ -3,99 +3,100 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mombasa Data Viewer</title>
+    <title>Mombasa Data Debugger</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: left;
-        }
-        th {
-            background-color: #f2f2f2;
-        }
-        .loading {
-            color: #666;
-            font-style: italic;
-        }
-        .error {
-            color: red;
-        }
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        #debug { background: #f5f5f5; padding: 15px; border-radius: 5px; margin-top: 20px; }
+        .success { color: green; }
+        .error { color: red; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
     </style>
 </head>
 <body>
-    <h1>Mombasa Data</h1>
-    <div id="loading" class="loading">Loading data...</div>
-    <div id="error" class="error" style="display: none;"></div>
-    <table id="data-table" style="display: none;">
-        <thead>
-            <tr id="table-headers"></tr>
-        </thead>
-        <tbody id="table-body"></tbody>
-    </table>
+    <h1>Mombasa Data Debugger</h1>
+    <button onclick="loadData()">Reload Data</button>
+    <div id="data-container"></div>
+    <div id="debug">
+        <h3>Debug Console</h3>
+        <div id="debug-log"></div>
+    </div>
 
-    <!-- Load Supabase client library -->
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <script>
-        // Initialize Supabase client - REPLACE WITH YOUR VALUES
-        const supabase = supabase.createClient(
-            'https://jtqfbjatqlqhjkxjnixt.supabase.co',
-            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp0cWZiamF0cWxxaGpreGpuaXh0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxNDA2OTksImV4cCI6MjA2MTcxNjY5OX0.1VuFW1s8YAhZzu8chFHOV2jqT8ucgoNDKzsLQ3Ova_0'
-        );
-
-        // Fetch and display data
-        async function loadData() {
-            try {
-                const { data, error } = await supabase
-                    .from('mombasa')
-                    .select('*')
-                    .order('created_at', { ascending: false });
-
-                if (error) throw error;
-
-                if (data && data.length > 0) {
-                    // Create table headers
-                    const headers = Object.keys(data[0]);
-                    document.getElementById('table-headers').innerHTML = 
-                        headers.map(header => `<th>${header}</th>`).join('');
-
-                    // Create table rows
-                    document.getElementById('table-body').innerHTML = 
-                        data.map(row => 
-                            `<tr>${
-                                headers.map(header => 
-                                    `<td>${row[header] || '—'}</td>`
-                                ).join('')
-                            }</tr>`
-                        ).join('');
-
-                    // Show table
-                    document.getElementById('data-table').style.display = 'table';
-                    document.getElementById('loading').style.display = 'none';
-                } else {
-                    document.getElementById('loading').textContent = 'No data found';
-                }
-            } catch (err) {
-                console.error('Error:', err);
-                document.getElementById('loading').style.display = 'none';
-                document.getElementById('error').textContent = 
-                    `Error loading data: ${err.message}`;
-                document.getElementById('error').style.display = 'block';
-            }
+        // 1. Initialize Supabase - REPLACE THESE VALUES
+        const supabaseUrl = 'https://jtqfbjatqlqhjkxjnixt.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp0cWZiamF0cWxxaGpreGpuaXh0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxNDA2OTksImV4cCI6MjA2MTcxNjY5OX0.1VuFW1s8YAhZzu8chFHOV2jqT8ucgoNDKzsLQ3Ova_0';
+        const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+        
+        // Debug logging function
+        function logDebug(message, isError = false) {
+            const debugDiv = document.getElementById('debug-log');
+            const logEntry = document.createElement('div');
+            logEntry.className = isError ? 'error' : 'success';
+            logEntry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            debugDiv.prepend(logEntry);
         }
 
-        // Load data when page loads
-        document.addEventListener('DOMContentLoaded', loadData);
+        // 2. Enhanced loadData function with debugging
+        async function loadData() {
+            logDebug("Starting data load...");
+            
+            try {
+                // Clear previous data
+                document.getElementById('data-container').innerHTML = '<p>Loading...</p>';
+                
+                // 3. Test connection first
+                logDebug("Testing Supabase connection...");
+                const { data: authData, error: authError } = await supabase.auth.getSession();
+                
+                if (authError) {
+                    throw new Error(`Connection failed: ${authError.message}`);
+                }
+                logDebug("✓ Connected to Supabase successfully");
+                
+                // 4. Fetch data with debugging
+                logDebug("Querying 'mombasa' table...");
+                const { data, error, count } = await supabase
+                    .from('mombasa')
+                    .select('*', { count: 'exact' })
+                    .order('created_at', { ascending: false });
+                
+                if (error) throw error;
+                
+                logDebug(`✓ Success! Found ${data.length} records`);
+                
+                // 5. Display data
+                if (data.length > 0) {
+                    const headers = Object.keys(data[0]);
+                    let html = `
+                        <table>
+                            <thead><tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr></thead>
+                            <tbody>
+                                ${data.map(row => `
+                                    <tr>${headers.map(h => `<td>${row[h] !== null ? row[h] : 'NULL'}</td>`).join('')}</tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                        <p>Total records: ${count}</p>
+                    `;
+                    document.getElementById('data-container').innerHTML = html;
+                } else {
+                    document.getElementById('data-container').innerHTML = '<p>No records found</p>';
+                }
+                
+            } catch (err) {
+                logDebug(`Error: ${err.message}`, true);
+                document.getElementById('data-container').innerHTML = `
+                    <p class="error">Error loading data: ${err.message}</p>
+                    <p>Check the debug console below for details</p>
+                `;
+                console.error("Full error:", err);
+            }
+        }
+        
+        // Initial load
+        loadData();
     </script>
 </body>
 </html>
