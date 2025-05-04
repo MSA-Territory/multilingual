@@ -1,38 +1,38 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Supabase Test</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <title>Supabase Connection Test</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-  <h2>Supabase Test</h2>
-  <div id="output">Connecting...</div>
+  <h2>Supabase Connection Test</h2>
+  <div id="output">Testing connection...</div>
 
   <script>
-    // Replace these with your actual values
+    // Replace with your actual credentials
     const SUPABASE_URL = 'https://jtqfbjatqlqhjkxjnixt.supabase.co';
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp0cWZiamF0cWxxaGpreGpuaXh0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxNDA2OTksImV4cCI6MjA2MTcxNjY5OX0.1VuFW1s8YAhZzu8chFHOV2jqT8ucgoNDKzsLQ3Ova_0'; // your anon key
-    const TABLE_NAME = 'MSA';
-
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp0cWZiamF0cWxxaGpreGpuaXh0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxNDA2OTksImV4cCI6MjA2MTcxNjY5OX0.1VuFW1s8YAhZzu8chFHOV2jqT8ucgoNDKzsLQ3Ova_0';
+    
     const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    const output = document.getElementById('output');
 
-    async function testFetch() {
-      const output = document.getElementById('output');
+    // Simplest possible test - just list tables to verify connection
+    async function testConnection() {
       try {
-        const { data, error } = await supabase.from(TABLE_NAME).select('*').limit(1);
+        const { data, error } = await supabase.rpc('list_tables');
+        
         if (error) {
-          output.textContent = 'Error: ' + error.message;
-        } else if (data.length === 0) {
-          output.textContent = 'Connected: No data found.';
-        } else {
-          output.textContent = 'Success: ' + JSON.stringify(data[0]);
+          output.innerHTML = `Error: ${error.message}<br>Check your CORS settings in Supabase Dashboard`;
+        } else if (data) {
+          output.innerHTML = `Success! Found ${data.length} tables`;
+          console.log("Tables:", data); // View tables in browser console
         }
       } catch (e) {
-        output.textContent = 'Exception: ' + e.message;
+        output.innerHTML = `Exception: ${e.message}<br>Likely CORS or network issue`;
       }
     }
 
-    testFetch();
+    testConnection();
   </script>
 </body>
 </html>
