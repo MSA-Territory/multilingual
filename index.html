@@ -1,121 +1,26 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mombasa Data Viewer</title>
-    <style>
-        body { font-family: Arial, sans-serif; padding: 20px; }
-        #data { margin: 20px 0; padding: 10px; border: 1px solid #eee; }
-        .error { color: red; }
-        .success { color: green; }
-    </style>
-</head>
+<html>
 <body>
-    <h1>Mombasa Data Viewer</h1>
-    <div id="status">Initializing...</div>
-    <div id="data"></div>
-
-    <!-- 1. Load Supabase from CDN with fallback -->
-    <script src="https://unpkg.com/@supabase/supabase-js@2" 
-            onerror="loadFallbackSupabase()"
-            id="supabase-script"></script>
-    
-    <script>
-        // 2. Global error handler
-        window.supabaseInitError = null;
-        let supabase;
-        
-        // 3. Fallback loading if CDN fails
-        function loadFallbackSupabase() {
-            document.getElementById('status').innerHTML = 
-                '<p class="error">CDN failed, loading from alternate source...</p>';
-            
-            const fallbackScript = document.createElement('script');
-            fallbackScript.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
-            fallbackScript.onerror = () => {
-                window.supabaseInitError = new Error('Failed to load Supabase from all sources');
-                document.getElementById('status').innerHTML = 
-                    '<p class="error">❌ Could not load Supabase library</p>';
-            };
-            document.head.appendChild(fallbackScript);
-        }
-
-        // 4. Wait for everything to load
-        document.addEventListener('DOMContentLoaded', function() {
-            // Check if library loaded
-            if (typeof supabase !== 'undefined' && supabase.createClient) {
-                initializeApp();
-            } else {
-                // Last resort timeout check
-                setTimeout(() => {
-                    if (!window.supabaseInitError && typeof supabase !== 'undefined') {
-                        initializeApp();
-                    } else {
-                        document.getElementById('status').innerHTML = 
-                            '<p class="error'>❌ Supabase library not available</p>';
-                        console.error('Supabase object:', typeof supabase);
-                    }
-                }, 2000);
-            }
-        });
-
-        // 5. Main initialization
-        function initializeApp() {
-            try {
-                document.getElementById('status').textContent = 'Connecting to Supabase...';
-                
-                // REPLACE THESE WITH YOUR VALUES
-                supabase = supabase.createClient(
-                    'https://jtqfbjatqlqhjkxjnixt.supabase.co',
-                    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp0cWZiamF0cWxxaGpreGpuaXh0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxNDA2OTksImV4cCI6MjA2MTcxNjY5OX0.1VuFW1s8YAhZzu8chFHOV2jqT8ucgoNDKzsLQ3Ova_0'
-                );
-                
-                // Test connection
-                supabase.auth.getSession()
-                    .then(({ data }) => {
-                        document.getElementById('status').innerHTML = 
-                            '<p class="success">✓ Connected to Supabase</p>';
-                        loadData();
-                    })
-                    .catch(err => {
-                        showError('Connection failed', err);
-                    });
-                    
-            } catch (err) {
-                showError('Initialization failed', err);
-            }
-        }
-
-        // 6. Data loading
-        async function loadData() {
-            try {
-                document.getElementById('status').textContent += ' Loading data...';
-                
-                const { data, error } = await supabase
-                    .from('mombasa')
-                    .select('*');
-                
-                if (error) throw error;
-                
-                document.getElementById('data').innerHTML = 
-                    `<pre>${JSON.stringify(data, null, 2)}</pre>`;
-                document.getElementById('status').innerHTML = 
-                    '<p class="success">✓ Data loaded successfully</p>';
-                
-            } catch (err) {
-                showError('Data load failed', err);
-            }
-        }
-
-        // 7. Error display
-        function showError(context, err) {
-            console.error(context, err);
-            document.getElementById('status').innerHTML = 
-                `<p class="error">❌ ${context}: ${err.message}</p>`;
-            document.getElementById('data').innerHTML = 
-                `<p>Check console for details</p>`;
-        }
-    </script>
+  <pre id="result">Testing Supabase connection...</pre>
+  
+  <script>
+    // DIRECT FETCH (bypasses Supabase client)
+    fetch('https://jtqfbjatqlqhjkxjnixt.supabase.co/rest/v1/test_table?select=*', {
+      headers: {
+        'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...', // Your FULL anon key
+        'Content-Type': 'application/json'
+      }
+    })
+    .then(r => r.json())
+    .then(data => {
+      document.getElementById('result').textContent = 
+        JSON.stringify(data, null, 2);
+    })
+    .catch(err => {
+      document.getElementById('result').textContent = 
+        `FAILED: ${err.message}\nCheck console (F12) for details`;
+      console.error(err);
+    });
+  </script>
 </body>
 </html>
