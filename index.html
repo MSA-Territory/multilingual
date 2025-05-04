@@ -1,26 +1,101 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mombasa Data Viewer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .loading {
+            color: #666;
+            font-style: italic;
+        }
+        .error {
+            color: red;
+        }
+    </style>
+</head>
 <body>
-  <div id="data"></div>
+    <h1>Mombasa Data</h1>
+    <div id="loading" class="loading">Loading data...</div>
+    <div id="error" class="error" style="display: none;"></div>
+    <table id="data-table" style="display: none;">
+        <thead>
+            <tr id="table-headers"></tr>
+        </thead>
+        <tbody id="table-body"></tbody>
+    </table>
 
-  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-  <script>
-    const supabase = supabase.createClient(
-      'https://jtqfbjatqlqhjkxjnixt.supabase.co',  // Your URL
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp0cWZiamF0cWxxaGpreGpuaXh0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxNDA2OTksImV4cCI6MjA2MTcxNjY5OX0.1VuFW1s8YAhZzu8chFHOV2jqT8ucgoNDKzsLQ3Ova_0'   // Your anon key
-    );
+    <!-- Load Supabase client library -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script>
+        // Initialize Supabase client - REPLACE WITH YOUR VALUES
+        const supabase = supabase.createClient(
+            'https://jtqfbjatqlqhjkxjnixt.supabase.co',
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp0cWZiamF0cWxxaGpreGpuaXh0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxNDA2OTksImV4cCI6MjA2MTcxNjY5OX0.1VuFW1s8YAhZzu8chFHOV2jqT8ucgoNDKzsLQ3Ova_0'
+        );
 
-    // Fetch data from mombasa table
-    async function loadData() {
-      const { data } = await supabase
-        .from('mombasa')  // ️ No quotes in table name
-        .select('*');
-      
-      document.getElementById('data').innerHTML = 
-        JSON.stringify(data, null, 2);
-    }
+        // Fetch and display data
+        async function loadData() {
+            try {
+                const { data, error } = await supabase
+                    .from('mombasa')
+                    .select('*')
+                    .order('created_at', { ascending: false });
 
-    loadData();
-  </script>
+                if (error) throw error;
+
+                if (data && data.length > 0) {
+                    // Create table headers
+                    const headers = Object.keys(data[0]);
+                    document.getElementById('table-headers').innerHTML = 
+                        headers.map(header => `<th>${header}</th>`).join('');
+
+                    // Create table rows
+                    document.getElementById('table-body').innerHTML = 
+                        data.map(row => 
+                            `<tr>${
+                                headers.map(header => 
+                                    `<td>${row[header] || '—'}</td>`
+                                ).join('')
+                            }</tr>`
+                        ).join('');
+
+                    // Show table
+                    document.getElementById('data-table').style.display = 'table';
+                    document.getElementById('loading').style.display = 'none';
+                } else {
+                    document.getElementById('loading').textContent = 'No data found';
+                }
+            } catch (err) {
+                console.error('Error:', err);
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('error').textContent = 
+                    `Error loading data: ${err.message}`;
+                document.getElementById('error').style.display = 'block';
+            }
+        }
+
+        // Load data when page loads
+        document.addEventListener('DOMContentLoaded', loadData);
+    </script>
 </body>
 </html>
