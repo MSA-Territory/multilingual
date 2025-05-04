@@ -14,7 +14,7 @@
     
     document.getElementById('fetchData').addEventListener('click', async () => {
       const { data, error } = await supabase
-        .from('your_table')
+        .from('MSA')
         .select('*')
         .limit(5);
       
