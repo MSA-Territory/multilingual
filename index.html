@@ -1,38 +1,25 @@
+<!-- index.html in your GitHub repo -->
 <!DOCTYPE html>
 <html>
-<head>
-  <title>Supabase Connection Test</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-</head>
 <body>
-  <h2>Supabase Connection Test</h2>
-  <div id="output">Testing connection...</div>
-
+  <button id="fetchData">Test Secure Connection</button>
+  <pre id="output"></pre>
+  
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
   <script>
-    // Replace with your actual credentials
-    const SUPABASE_URL = 'https://jtqfbjatqlqhjkxjnixt.supabase.co';
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp0cWZiamF0cWxxaGpreGpuaXh0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxNDA2OTksImV4cCI6MjA2MTcxNjY5OX0.1VuFW1s8YAhZzu8chFHOV2jqT8ucgoNDKzsLQ3Ova_0';
+    const supabase = supabase.createClient(
+      'https://jtqfbjatqlqhjkxjnixt.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp0cWZiamF0cWxxaGpreGpuaXh0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxNDA2OTksImV4cCI6MjA2MTcxNjY5OX0.1VuFW1s8YAhZzu8chFHOV2jqT8ucgoNDKzsLQ3Ova_0' // Only safe with RLS enabled!
+    )
     
-    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-    const output = document.getElementById('output');
-
-    // Simplest possible test - just list tables to verify connection
-    async function testConnection() {
-      try {
-        const { data, error } = await supabase.rpc('list_tables');
-        
-        if (error) {
-          output.innerHTML = `Error: ${error.message}<br>Check your CORS settings in Supabase Dashboard`;
-        } else if (data) {
-          output.innerHTML = `Success! Found ${data.length} tables`;
-          console.log("Tables:", data); // View tables in browser console
-        }
-      } catch (e) {
-        output.innerHTML = `Exception: ${e.message}<br>Likely CORS or network issue`;
-      }
-    }
-
-    testConnection();
+    document.getElementById('fetchData').addEventListener('click', async () => {
+      const { data, error } = await supabase
+        .from('your_table')
+        .select('*')
+        .limit(5);
+      
+      document.getElementById('output').textContent = JSON.stringify(data, null, 2);
+    });
   </script>
 </body>
 </html>
