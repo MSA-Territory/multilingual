@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Supabase Multilingual Test</title>
+</head>
+<body>
+  <h1>Data from Supabase (mombasa)</h1>
+  <pre id="output">Loading...</pre>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script>
+    const SUPABASE_URL = '<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Supabase Multilingual Test</title>
+</head>
+<body>
+  <h1>Data from Supabase (mombasa)</h1>
+  <pre id="output">Loading...</pre>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script>
+    const SUPABASE_URL = 'https://YOUR_PROJECT_ID.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp0cWZiamF0cWxxaGpreGpuaXh0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxNDA2OTksImV4cCI6MjA2MTcxNjY5OX0.1VuFW1s8YAhZzu8chFHOV2jqT8ucgoNDKzsLQ3Ova_0';
+
+    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    async function loadData() {
+      const { data, error } = await supabase
+        .from('mombasa')
+        .select('*');
+
+      if (error) {
+        document.getElementById('output').textContent = 'Error: ' + error.message;
+      } else {
+        document.getElementById('output').textContent = JSON.stringify(data, null, 2);
+      }
+    }
+
+    loadData();
+  </script>
+</body>
+</html>
+';
+    const SUPABASE_ANON_KEY = 'YOUR_ANON_KEY_HERE';
+
+    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    async function loadData() {
+      const { data, error } = await supabase
+        .from('mombasa')
+        .select('*');
+
+      if (error) {
+        document.getElementById('output').textContent = 'Error: ' + error.message;
+      } else {
+        document.getElementById('output').textContent = JSON.stringify(data, null, 2);
+      }
+    }
+
+    loadData();
+  </script>
+</body>
+</html>
