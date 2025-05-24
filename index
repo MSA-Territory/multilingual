@@ -1,66 +1,2140 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <title>Supabase Multilingual Test</title>
-</head>
-<body>
-  <h1>Data from Supabase (mombasa)</h1>
-  <pre id="output">Loading...</pre>
+<!-- Main Filter Container -->
+<div style="display: flex; flex-direction: column; gap: 16px; width: 100%; align-items: center;">
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-  <script>
-    const SUPABASE_URL = '<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <title>Supabase Multilingual Test</title>
-</head>
-<body>
-  <h1>Data from Supabase (mombasa)</h1>
-  <pre id="output">Loading...</pre>
+  <!-- Top Row: Buttons -->
+  <div class="button-row" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 16px; width: 100%;">
+    <!-- Congregation Button -->
+    <div class="filter-group" style="flex: 0 1 200px; min-width: 200px; max-width: 250px;">
+      <button id="congregation-btn" style="width: 100%; background-color: #4CAF50; color: white; border: none; padding: 8px; border-radius: 4px; font-weight: bold;">
+        Congregation
+      </button>
+    </div>
+    <!-- Assignee Button -->
+    <div class="filter-group" style="flex: 0 1 200px; min-width: 200px; max-width: 250px;">
+      <button id="assignee-btn" style="width: 100%; background-color: #4CAF50; color: white; border: none; padding: 8px; border-radius: 4px; font-weight: bold;">
+        Assignee
+      </button>
+    </div>
+    <!-- New Territory Button -->
+    <div class="filter-group" style="flex: 0 1 200px; min-width: 200px; max-width: 250px;">
+      <button id="new-territory-btn" style="width: 100%; background-color: #4CAF50; color: white; border: none; padding: 8px; border-radius: 4px; font-weight: bold;">
+        New Territory
+      </button>
+    </div>
+  </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-  <script>
-    const SUPABASE_URL = 'https://YOUR_PROJECT_ID.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp0cWZiamF0cWxxaGpreGpuaXh0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxNDA2OTksImV4cCI6MjA2MTcxNjY5OX0.1VuFW1s8YAhZzu8chFHOV2jqT8ucgoNDKzsLQ3Ova_0';
+  <!-- Row: Dropdowns -->
+  <div class="dropdown-row" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 16px; width: 250px;">
+    <div id="congregation-dropdown" class="filter-group" style="flex: 0 1 200px; min-width: 200px; max-width: 250px; display: none;">
+      <select id="cong-filter" aria-label="Congregation" style="width: 100%;">
+        <option value="">-- Select --</option>
+      </select>
+    </div>
 
-    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    <div id="assignee-dropdown" class="filter-group" style="flex: 0 1 200px; width: 250px; display: none;">
+      <select id="publisher-filter" aria-label="Select publisher" style="width: 100%;">
+        <option value="">-- Assignee --</option>
+      </select>
+    </div>
+  </div>
 
-    async function loadData() {
+  <!-- Row: Secondary Filters -->
+  <div id="secondary-filters" class="filter-row" style="display: none; flex-wrap: wrap; justify-content: center; gap: 16px; width: 100%; max-width: 550px;">
+
+    <div class="filter-group">
+      <select id="res-filter" aria-label="Select territory type" style="width: 250px;">
+        <option value="true">Residential</option>
+        <option value="false">Business</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <select id="map-type-filter" aria-label="Select map type" style="width: 250px;">
+        <option value="full">Full Maps</option>
+        <option value="subdivided">Subdivided Maps</option>
+      </select>
+    </div>
+  </div>
+
+</div>
+
+
+<script>
+  // Get references to all dropdowns
+  const congDropdown = document.getElementById('congregation-dropdown');
+  const assigneeDropdown = document.getElementById('assignee-dropdown');
+  const secondaryFilters = document.getElementById('secondary-filters');
+
+  // Function to close all dropdowns
+function closeAllDropdowns(exceptId = null) {
+  const dropdowns = [
+    'congregation-dropdown',
+    'assignee-dropdown',
+    'secondary-filters',
+  ];
+  
+  dropdowns.forEach(id => {
+    if (id !== exceptId) { // Skip if ID matches the exception
+      const element = document.getElementById(id);
+      if (element) element.style.display = 'none';
+    }
+  });
+}
+  
+// Function to close New Territory
+function closeTerritoryForm() {
+  const newTerritoryForm = document.getElementById('new-territory-form');
+  if (newTerritoryForm) newTerritoryForm.style.display = 'none';
+}
+
+
+
+ // Helper function to clear all displayed data
+// Helper function to clear all displayed data including Subdivided dropdown
+function clearDataDisplay() {
+    // Clear table contents
+    document.getElementById('table-container').innerHTML = "";
+    document.getElementById('checked-out-table-container').innerHTML = "";
+    
+    // Clear headers
+    document.getElementById('results-header').textContent = "";
+    document.getElementById('checked-out-header').textContent = "";
+    
+    // Hide display areas
+    document.getElementById('data-display').style.display = "none";
+    document.getElementById('checked-out-display').style.display = "none";
+    
+    // Clear any notifications
+    document.getElementById('error-message').style.display = "none";
+    document.getElementById('success-message').style.display = "none";
+    
+    // Clear and hide the Subdivided dropdown
+    document.getElementById('subdivided-filter').innerHTML = '<option value="">-- Select Parent Map --</option>';
+    document.getElementById('subdivided-controls').style.display = "none";
+}
+
+// Congregation button click handler
+document.getElementById('congregation-btn').addEventListener('click', function() {
+    // Close other open UI elements
+    closeTerritoryForm();
+    closeAllDropdowns('congregation-dropdown');
+
+    
+    // Toggle congregation dropdown
+    congDropdown.style.display = congDropdown.style.display === 'none' ? 'flex' : 'none';
+    
+    // Clear all displayed data including Subdivided dropdown
+    clearDataDisplay();
+    
+
+    
+    // Also clear the congregation filter if showing dropdown
+    if (congDropdown.style.display === 'flex') {
+        document.getElementById('cong-filter').value = "";
+    };
+});
+
+// Assignee button click handler
+document.getElementById('assignee-btn').addEventListener('click', function() {
+    // Close other open UI elements
+    closeTerritoryForm();
+    closeAllDropdowns('assignee-dropdown');
+    
+    // Toggle assignee dropdown
+    assigneeDropdown.style.display = assigneeDropdown.style.display === 'none' ? 'flex' : 'none';
+    
+    // Clear all displayed data including Subdivided dropdown
+    clearDataDisplay();
+    
+    // Also clear the publisher filter if showing dropdown
+    if (assigneeDropdown.style.display === 'flex') {
+        document.getElementById('publisher-filter').value = "";
+    }
+});
+</script>
+
+
+
+  <!-- Notification area -->
+  <div id="notification-area" role="alert" aria-live="polite" style="text-align: center;">
+    <div
+      id="error-message"
+      class="notification error"
+      style="display: none"
+    ></div>
+    <div
+      id="success-message"
+      class="notification success"
+      style="display: none"
+    ></div>
+  </div>
+
+  <div
+    id="subdivided-message"
+    style="
+      display: none;
+      color: #721c24;
+      padding: 8px;
+      background-color: #f8d7da;
+      border-radius: 4px;
+      text-align: center;
+      width: 516px; /* 250px + 250px + 16px gap */
+      margin: 0 auto;
+    "
+  ></div>
+
+  <!-- Subdivided Controls (initially hidden) -->
+  <div id="subdivided-controls" style="display: none; text-align: center; margin-top: 20px;">
+    <div class="filter-row" style="display: flex; justify-content: center; gap: 16px; width: 100%;">
+      <div class="filter-group" style="flex: 1; max-width: 516px;">
+        <label for="subdivided-filter" style="display: none;">Select Parent Map</label>
+        <select id="subdivided-filter" aria-label="Select parent map" style="width: 100%;">
+          <option value="">-- Select Parent Map --</option>
+        </select>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- New Territory Form (initially hidden) -->
+<div id="new-territory-form" style="display:none; margin: 20px auto; max-width: 600px; padding: 20px; background: #f5f5f5; border-radius: 8px;">
+  <h3 style="text-align: center;">Add New Territory</h3>
+  <form id="territory-form">
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+      <!-- Congregation (dropdown) -->
+      <div class="form-group">
+        <label for="new-cong-name">Congregation (required):</label>
+        <select id="new-cong-name" required style="width: 100%; padding: 8px;">
+          <option value="">-- Select --</option>
+        </select>
+      </div>
+
+      <!-- Territory Number (number input) -->
+      <div class="form-group">
+        <label for="new-ter-no">Territory Number (required):</label>
+        <input type="number" id="new-ter-no" required style="width: 100%; padding: 8px;">
+      </div>
+
+      <!-- Territory Type (Residential/Business) -->
+      <div class="form-group">
+        <label for="new-is-res">Territory Type:</label>
+        <select id="new-is-res" style="width: 100%; padding: 8px;">
+          <option value="false">Business</option>
+          <option value="true">Residential</option>
+        </select>
+      </div>
+
+      <!-- Map Type (Full/Subdivided) -->
+      <div class="form-group">
+        <label for="new-is-full">Map Type:</label>
+        <select id="new-is-full" style="width: 100%; padding: 8px;">
+          <option value="false">Subdivided</option>
+          <option value="true">Full Map</option>
+        </select>
+      </div>
+
+      <!-- Territory Name -->
+      <div class="form-group" style="grid-column: span 2;">
+        <label for="new-ter-name">Territory Name (required, max 20 chars):</label>
+        <input type="text" id="new-ter-name" maxlength="20" required style="width: 100%; padding: 8px;">
+      </div>
+
+      <!-- Description -->
+      <div class="form-group" style="grid-column: span 2;">
+        <label for="new-ter-desc">Description (required, max 40 chars):</label>
+        <input type="text" id="new-ter-desc" maxlength="40" required style="width: 100%; padding: 8px;">
+      </div>
+    </div>
+
+    <!-- Form buttons -->
+    <div style="display: flex; justify-content: center; gap: 16px; margin-top: 20px;">
+      <button type="submit" style="padding: 8px 16px;">Save</button>
+    </div>
+
+
+
+  </form>
+</div>
+
+<script>
+function showFormSuccess(message) {
+  const successElement = document.getElementById('form-success-message');
+  successElement.innerHTML = message;
+  successElement.style.display = 'block';
+  setTimeout(() => {
+    successElement.style.display = 'none';
+  }, 2000);
+}
+
+function showFormError(message) {
+  const errorElement = document.getElementById('form-validation-error');
+  errorElement.innerHTML = message;
+  errorElement.style.display = 'block';
+}
+
+// Toggle description required notice
+document.getElementById('new-is-full')?.addEventListener('change', function () {
+  const descRequiredText = document.getElementById('desc-required-text');
+  descRequiredText.style.display = (this.value === "false") ? 'inline' : 'none';
+});
+
+// Handle form submission
+document.getElementById('territory-form')?.addEventListener('submit', async function(e) {
+  e.preventDefault();
+
+  // Hide previous messages
+  document.getElementById('form-success-message').style.display = 'none';
+  document.getElementById('form-validation-error').style.display = 'none';
+
+  // Reset any error styles
+  document.getElementById('new-ter-desc').style.border = '';
+
+  // Get form values
+  const congName = document.getElementById('new-cong-name').value;
+  const terNo = document.getElementById('new-ter-no').value;
+  const terName = document.getElementById('new-ter-name').value;
+  const isSubdivision = document.getElementById('new-is-full').value === "false";
+  const terDescEl = document.getElementById('new-ter-desc');
+  const terDesc = terDescEl.value;
+
+  // Validate fields
+  const errors = [];
+  if (!congName) errors.push("Please select a congregation");
+  if (!terNo) errors.push("Territory number is required");
+  if (!terName) errors.push("Territory name is required");
+  if (isSubdivision && !terDesc) {
+    errors.push("Description is required for subdivisions");
+    terDescEl.style.border = "2px solid red"; // highlight missing field
+  }
+
+  if (errors.length > 0) {
+    showFormError(errors.join("<br>"));
+    return;
+  }
+
+  try {
+
+    
+    showFormSuccess("Territory added successfully!");
+
+    setTimeout(() => {
+      document.getElementById('territory-form').reset();
+     
+      document.getElementById('desc-required-text').style.display = 'none';
+
+    }, 2000);
+  } catch (error) {
+    showFormError("An error occurred while submitting the form");
+  }
+});
+</script>
+
+<!-- Optional: Checked-out Display -->
+<div id="checked-out-display" style="display: none; margin-top: 20px;">
+  <h4 id="checked-out-header"></h4>
+  <div id="checked-out-table-container" class="table-responsive"></div>
+</div>
+
+<!-- Loading Indicator -->
+<div id="loading-indicator" class="loading" style="display: none;">
+  <span class="loading-text">Loading data...</span>
+</div>
+
+<!-- Data Display -->
+<div id="data-display" style="display: none;">
+  <h4 id="results-header"></h4>
+  <div id="table-container" class="table-responsive"></div>
+</div>
+
+
+<!-- New Table for Checked Out Territories -->
+<div id="checked-out-display" style="display: none; margin-top: 20px;">
+  <h4 id="checked-out-header"></h4>
+  <div id="checked-out-table-container" class="table-responsive"></div>
+</div>
+
+<!-- Loading indicator -->
+<div id="loading-indicator" class="loading" style="display: none">
+  <span class="loading-text">Loading data...</span>
+</div>
+
+<!-- Data Display (initially hidden) -->
+<div id="data-display" style="display: none">
+  <h4 id="results-header"></h4>
+
+  <div id="table-container" class="table-responsive"></div>
+</div>
+
+<style>
+/* ========== BASE STYLES ========== */
+:root {
+  --primary-color: #4CAF50;
+  --primary-hover: #45a049;
+  --disabled-color: #cccccc;
+  --table-border: #ddd;
+  --row-hover: #f5f5f5;
+  --even-row: #f9f9f9;
+  --territory-color: #d6f1ee;
+  --date-color: #f0f8ff;
+  --date-header-color: #B0C4DE;
+  --date-header-text: #ffffff;
+  --editable-color: #fffacd;
+  --editable-hover: #ffe082;
+  --error-bg: #f8d7da;
+  --error-border: #f5c6cb;
+  --error-text: #721c24;
+  --success-bg: #d4edda;
+  --success-border: #c3e6cb;
+  --success-text: #155724;
+  --lime-bg:  #f2f29e;
+}
+
+/* Checked Out Territories Table Styles */
+.checked-out-cong-name {
+  min-width: 100px;
+  font-weight: bold;
+  background-color: #f3f3f3;
+}
+
+.checked-out-ter-no {
+  font-weight: bold;
+  background-color: #e6f7ff;
+}
+
+.checked-out-ter-type {
+  text-align: center;
+}
+
+.checked-out-ter-name {
+    min-width: 100px;
+  max-width: 100px;
+}
+
+.checked-out-ter-desc {
+  min-width: 50px;
+  max-width: 200px;
+}
+
+
+.checked-out-date {
+  background-color: #fff2cc;
+  text-align: center;
+}
+
+.checked-out-return-btn {
+  background-color: #d9ead3;
+  color: #274e13;
+  border: 1px solid #93c47d;
+  padding: 5px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.checked-out-return-btn:hover {
+  background-color: #93c47d;
+  color: white;
+}
+
+.checked-out-header {
+  background-color: #d9d9d9;
+  font-weight: bold;
+}
+
+/* ========== FILTER STYLES ========== */
+.filter-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  margin-bottom: 20px;
+  align-items: flex-end;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  min-width: 200px;
+}
+
+.filter-group label {
+  margin-bottom: 5px;
+  font-weight: bold;
+  color: #333;
+}
+
+select {
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 16px;
+  background-color: white;
+  transition: border-color 0.3s;
+}
+
+select:focus {
+  border-color: var(--primary-color);
+  outline: none;
+}
+
+button {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  font-size: 16px;
+  background-color: var(--primary-color);
+  color: white;
+  cursor: pointer;
+  min-width: 100px;
+  transition: background-color 0.3s;
+}
+
+button:hover {
+  background-color: var(--primary-hover);
+}
+
+button:disabled {
+  background-color: var(--disabled-color);
+  cursor: not-allowed;
+}
+
+/* ========== TABLE STYLES ========== */
+.table-responsive {
+  max-width: 1800px;
+  overflow-x: auto;
+  margin: 20px auto 0 auto; /* top | right/left | bottom | right/left */
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 14px;
+}
+
+th, td {
+  border: 1px solid var(--table-border);
+  padding: 12px;
+  text-align: left;
+  background-color: var(--lime-bg);
+}
+
+th {
+  font-weight: bold;
+  position: sticky;
+  top: 0;
+}
+
+/* Column-specific headers */
+.ter-no-header {
+  background-color: #99cc66;
+  position: sticky;
+  left: 0; /* Stick to the left edge */
+  z-index: 1; /* Ensure it stays above other content */
+}
+
+.editable-header {
+  background-color: var(--editable-hover);
+}
+
+th.date-cell-header {
+  background-color: var(--date-header-color);
+}
+
+/* Row styles */
+tr:nth-child(even) {
+  background-color: var(--even-row);
+}
+
+tr:hover {
+  background-color: var(--row-hover);
+}
+
+/* Cell styles */
+.ter-no-cell {
+  cursor: pointer;
+  color: #000000;
+  font-weight: bold;
+  position: sticky;
+  left: 0;
+  z-index: 1;
+}
+
+
+.ter-name-cell,
+.ter-desc-cell {
+  background-color: var(--lime-bg); 
+}
+
+.ter-name-header,
+.ter-desc-header {
+  background-color: var(--editable-hover);
+}
+
+.date-cell {
+  cursor: pointer;
+  background-color: var(--date-color);
+}
+
+.date-cell-header {
+  background-color: #d9e9ff;
+}
+
+.date-cell:hover {
+  background-color: #e6f2ff;
+}
+
+/* Editable cells */
+.editable-cell {
+  cursor: pointer;
+  background-color: var(--editable-color);
+  position: relative;
+  transition: background-color 0.2s;
+}
+
+.editable-cell:hover {
+  background-color: var(--editable-hover);
+}
+
+.editable-cell:hover::after {
+  content: "✏️";
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+.editable-cell input,
+.date-cell input {
+  padding: 5px;
+  border: 1px solid #66afe9;
+  border-radius: 3px;
+  font: inherit;
+  box-sizing: border-box;
+  box-shadow: 0 0 5px rgba(102, 175, 233, 0.3);
+}
+
+.date-cell-header {
+  background-color: #d9e9ff;
+}
+
+
+
+/* ========== NOTIFICATION STYLES ========== */
+.notification {
+  padding: 12px 15px;
+  margin-bottom: 15px;
+  border-radius: 4px;
+  font-weight: bold;
+}
+
+.error {
+  background-color: var(--error-bg);
+  border: 1px solid var(--error-border);
+  color: var(--error-text);
+}
+
+.success {
+  background-color: var(--success-bg);
+  border: 1px solid var(--success-border);
+  color: var(--success-text);
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+.loading-text {
+  margin-left: 10px;
+}
+
+/* ========== RESPONSIVE STYLES ========== */
+@media screen and (max-width: 768px) {
+  .filter-container {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .filter-group {
+    width: 100%;
+    min-width: auto;
+  }
+
+  table {
+    font-size: 13px;
+  }
+
+  th, td {
+    padding: 8px;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  th, td {
+    padding: 6px;
+    font-size: 12px;
+  }
+}
+</style>
+<script type="module">
+  import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm"
+
+  // Configuration - Use environment variables in production
+  // This should be replaced with a secure authentication method in production
+  const config = {
+    supabaseUrl: "https://jtqfbjatqlqhjkxjnixt.supabase.co",
+    supabaseKey:
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp0cWZiamF0cWxxaGpreGpuaXh0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxNDA2OTksImV4cCI6MjA2MTcxNjY5OX0.1VuFW1s8YAhZzu8chFHOV2jqT8ucgoNDKzsLQ3Ova_0",
+    tableName: "mombasa",
+  }
+
+  // Initialize Supabase client
+  const supabase = createClient(config.supabaseUrl, config.supabaseKey)
+
+  // Elements
+ const elements = {
+    // Filter elements
+    congFilter: document.getElementById("cong-filter"),
+    publisherFilter: document.getElementById("publisher-filter"),
+    resFilter: document.getElementById("res-filter"),
+    mapTypeFilter: document.getElementById("map-type-filter"),
+    subdividedFilter: document.getElementById("subdivided-filter"),
+    secondaryFilters: document.getElementById('secondary-filters'),
+    publisherFilter: document.getElementById("publisher-filter"),
+    
+    // Message elements
+    errorMessage: document.getElementById("error-message"),
+    successMessage: document.getElementById("success-message"),
+    subdividedMessage: document.getElementById("subdivided-message"),
+    
+    // Display elements
+    dataDisplay: document.getElementById("data-display"),
+    resultsHeader: document.getElementById("results-header"),
+    tableContainer: document.getElementById("table-container"),
+    checkedOutDisplay: document.getElementById("checked-out-display"),
+    checkedOutHeader: document.getElementById("checked-out-header"),
+    checkedOutTableContainer: document.getElementById("checked-out-table-container"),
+    
+    // UI state elements
+    loadingIndicator: document.getElementById("loading-indicator"),
+    subdividedControls: document.getElementById("subdivided-controls"),
+    
+    // Form area
+    newTerritoryBtn: document.getElementById("new-territory-btn"),
+    notificationArea: document.getElementById("notification-area"),
+    subdividedMessage: document.getElementById("subdivided-message"),
+    subdividedControls: document.getElementById("subdivided-controls"),
+    
+    // New territory form
+    newTerritoryForm: document.getElementById("new-territory-form"),
+    territoryForm: document.getElementById("territory-form"),
+    newCongName: document.getElementById("new-cong-name"),
+    newTerNo: document.getElementById("new-ter-no"),
+    newIsRes: document.getElementById("new-is-res"),
+    newIsFull: document.getElementById("new-is-full"),
+    newTerName: document.getElementById("new-ter-name"),
+    newTerDesc: document.getElementById("new-ter-desc"),
+    cancelNewTerritory: document.getElementById("cancel-new-territory")
+};
+
+  // Define column display names
+  const columnDisplayNames = {
+    ter_no: "Terr. No.",
+    last_completed: "Last Date Completed*",
+    ter_name: "Name",
+    ter_desc: "Description",
+    slot1: "Assigned to",
+    slot1_out: "Date assigned",
+    slot1_ret: "Date completed",
+    slot2: "Assigned to",
+    slot2_out: "Date assigned",
+    slot2_ret: "Date completed",
+    slot3: "Assigned to",
+    slot3_out: "Date assigned",
+    slot3_ret: "Date completed",
+    slot4: "Assigned to",
+    slot4_out: "Date assigned",
+    slot4_ret: "Date completed",
+  }
+
+  // Define editable columns
+  const editableColumns = [
+    "slot1",
+    "slot2",
+    "slot3",
+    "slot4",
+    "ter_name",
+    "ter_desc",
+  ]
+
+  // Define date columns
+  const dateColumns = [
+    "last_completed",
+    "slot1_out",
+    "slot1_ret",
+    "slot2_out",
+    "slot2_ret",
+    "slot3_out",
+    "slot3_ret",
+    "slot4_out",
+    "slot4_ret",
+  ]
+
+  // Columns to exclude from the table display
+  const excludedColumns = ["id", "cong_name", "is_res", "is_full"]
+
+  // Column display order
+  const columnOrder = [
+    "ter_no",
+    "ter_name",
+    "ter_desc",
+    "last_completed",
+    "slot1",
+    "slot1_out",
+    "slot1_ret",
+    "slot2",
+    "slot2_out",
+    "slot2_ret",
+    "slot3",
+    "slot3_out",
+    "slot3_ret",
+    "slot4",
+    "slot4_out",
+    "slot4_ret",
+  ]
+
+  // Event Listeners
+elements.congFilter.addEventListener("change", function() {
+  resetPublisher();
+  resetSecondaryFilters();
+  handleCongregationChange();
+  elements.secondaryFilters.style.display = this.value ? 'flex' : 'none';
+  elements.publisherFilter.value = "";
+  elements.publisherFilter.value = "";
+  elements.checkedOutTableContainer.innerHTML = "";
+  elements.tableContainer.innerHTML = "";
+  elements.checkedOutHeader.textContent = "";
+  elements.resultsHeader.textContent = "";
+  elements.congFilter.addEventListener("change", hideNewTerritoryForm);
+	elements.congFilter.addEventListener("change", hideSubdividedControls);
+});
+  
+  elements.mapTypeFilter.addEventListener("change", handleMapTypeChange)
+  elements.resFilter.addEventListener("change", handleResFilterChange)
+  elements.subdividedFilter.addEventListener(
+    "change",
+    handleSubdividedFilterChange,
+  )
+  elements.publisherFilter.addEventListener("change", handlePublisherFilterChange);
+  
+// Event Listener for New Territory Button
+elements.newTerritoryBtn.addEventListener("click", function() {
+    showNewTerritoryForm();
+});
+
+// New Territory button click handler
+document.getElementById('new-territory-btn').addEventListener('click', function() {
+    // Close other dropdowns
+    closeAllDropdowns();
+    
+    // Close any open territory form if already visible
+    const isFormVisible = elements.newTerritoryForm.style.display === "block";
+    
+    if (isFormVisible) {
+        elements.newTerritoryForm.style.display = "none";
+    } else {
+        // Show the form and prepare it
+        toggleNewTerritoryForm();
+    }
+    
+    // Clear any displayed data
+    clearDataDisplay();
+    
+
+
+    
+});
+
+// Add event listeners when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+  // Congregation Button - toggles Assignee and New Territory buttons
+  document.getElementById('congregation-btn').addEventListener('click', function() {
+    toggleAssigneeButton();
+    toggleNewTerritoryButton();
+  });
+  
+  // Assignee Button - toggles Congregation and New Territory buttons
+  document.getElementById('assignee-btn').addEventListener('click', function() {
+    toggleCongregationButton();
+    toggleNewTerritoryButton();
+  });
+  
+  // New Territory Button - toggles Congregation and Assignee buttons
+  document.getElementById('new-territory-btn').addEventListener('click', function() {
+    toggleCongregationButton();
+    toggleAssigneeButton();
+  });
+});
+
+
+
+
+elements.territoryForm.addEventListener("submit", handleNewTerritorySubmit);
+
+elements.publisherFilter.addEventListener("change", hideNewTerritoryForm);
+
+// Toggles Congregation button visibility
+function toggleCongregationButton() {
+  const button = document.getElementById('congregation-btn');
+  if (button) button.style.display = button.style.display === 'none' ? 'block' : 'none';
+}
+
+// Toggles Assignee button visibility  
+function toggleAssigneeButton() {
+  const button = document.getElementById('assignee-btn');
+  if (button) button.style.display = button.style.display === 'none' ? 'block' : 'none';
+}
+
+// Toggles New Territory button visibility
+function toggleNewTerritoryButton() {
+  const button = document.getElementById('new-territory-btn');
+  if (button) button.style.display = button.style.display === 'none' ? 'block' : 'none';
+}
+
+function resetSecondaryFilters() {
+  const congSelected = elements.congFilter.value !== "";
+  
+  // Always reset values to defaults
+  elements.resFilter.value = 'true'; // Residential
+  elements.mapTypeFilter.value = 'full'; // Full Maps
+  
+  // Only hide if no congregation is selected
+  elements.secondaryFilters.style.display = congSelected ? 'flex' : 'none';
+  
+  // Additional reset for subdivided controls
+  if (!congSelected) {
+    elements.subdividedControls.style.display = 'none';
+    elements.subdividedFilter.value = '';
+  }
+}
+
+
+async function handleNewTerritorySubmit(e) {
+    e.preventDefault(); // Prevent default form submission
+    
+    try {
+        // Validate required fields
+        if (!elements.newCongName.value || !elements.newTerNo.value) {
+            showError("Please select a congregation and enter a territory number");
+            return;
+        }
+
+        // Get the highest current ID
+        const { data: maxIdData, error: maxIdError } = await supabase
+            .from(config.tableName)
+            .select("id")
+            .order("id", { ascending: false })
+            .limit(1);
+        
+        if (maxIdError) throw maxIdError;
+
+        const newId = maxIdData.length > 0 ? maxIdData[0].id + 1 : 1;
+
+        // Prepare new territory data
+        const newTerritory = {
+            id: newId,
+            cong_name: elements.newCongName.value,
+            is_res: elements.newIsRes.value === "true",
+            is_full: elements.newIsFull.value === "true",
+            ter_no: parseInt(elements.newTerNo.value),
+            ter_name: elements.newTerName.value || null,
+            ter_desc: elements.newTerDesc.value || null,
+            // All other columns remain NULL as requested
+        };
+
+        // Insert into database
+        const { error } = await supabase
+            .from(config.tableName)
+            .insert([newTerritory]);
+        
+        if (error) throw error;
+
+        // Success handling
+        showSuccess("Territory added successfully!");
+        clearNewTerritoryForm(); // Close the form
+        
+        // Refresh data if viewing the same congregation
+        if (elements.congFilter.value === newTerritory.cong_name) {
+            fetchData();
+        }
+
+    } catch (error) {
+        showError("Error saving territory: " + error.message);
+    }
+}
+
+function clearNewTerritoryForm() {
+  // Reset all form fields to their default values
+  elements.territoryForm.reset();
+  
+  // Explicitly set default values for selects (since .reset() may not cover all cases)
+  elements.newIsRes.value = "false"; // Default to Business
+  elements.newIsFull.value = "false"; // Default to Subdivided
+  
+  // Clear any validation errors
+  document.getElementById('form-validation-error').style.display = 'none';
+  
+  // Keep focus on the first field for usability
+  elements.newCongName.focus();
+}
+
+
+
+
+// Add this function with your other utility functions
+function hideSubdividedControls() {
+  elements.subdividedControls.style.display = "none";
+  elements.subdividedFilter.value = "";
+}
+
+// Add this with your other event listeners
+elements.congFilter.addEventListener("change", hideSubdividedControls);
+
+
+
+function hideNewTerritoryForm() {
+    elements.newTerritoryForm.style.display = "none";
+}
+
+
+function closeNotificationSections() {
+    // Elements to hide
+    const sectionsToClose = [
+        elements.notificationArea,
+        elements.subdividedMessage,
+        elements.subdividedControls,
+        elements.secondaryFilters,
+        elements.dataDisplay,
+        elements.checkedOutDisplay
+    ];
+    
+    // Clear values and content
+    elements.publisherFilter.value = "";
+    elements.congFilter.value = "";
+    elements.checkedOutTableContainer.innerHTML = "";
+    elements.tableContainer.innerHTML = "";
+    elements.checkedOutHeader.textContent = "";
+    elements.resultsHeader.textContent = "";
+    
+    // Hide elements
+    sectionsToClose.forEach(section => {
+        if (section) section.style.display = "none";
+    });
+    
+    // Hide individual messages
+    elements.errorMessage.style.display = "none";
+    elements.successMessage.style.display = "none";
+}
+
+async function toggleNewTerritoryForm() {
+    try {
+        // Check current state of the form
+        const isFormVisible = elements.newTerritoryForm.style.display === "block";
+        
+        if (isFormVisible) {
+            // If form is visible, hide it
+            elements.newTerritoryForm.style.display = "none";
+        } else {
+            // If form is hidden, prepare and show it
+            closeNotificationSections();
+            elements.newIsRes.value = "false"; // Business as default
+            elements.newIsFull.value = "false"; // Subdivided as default
+            elements.territoryForm.reset();
+            
+            if (elements.newCongName.options.length <= 1) {
+                await populateNewCongFilter();
+            }
+            
+            elements.newTerritoryForm.style.display = "block";
+            elements.newCongName.focus();
+        }
+    } catch (error) {
+        showError("Error toggling territory form: " + error.message);
+    }
+}
+
+
+
+async function populateNewCongFilter() {
+    try {
+        const { data, error } = await supabase
+            .from(config.tableName)
+            .select("cong_name")
+            .order("cong_name", { ascending: true });
+
+        if (error) throw error;
+
+        elements.newCongName.innerHTML = '<option value="">-- Select --</option>';
+        const uniqueCongs = [...new Set(data.map(item => item.cong_name?.trim()).filter(Boolean))];
+        
+        uniqueCongs.sort().forEach(cong => {
+            const option = document.createElement("option");
+            option.value = cong;
+            option.textContent = cong;
+            elements.newCongName.appendChild(option);
+        });
+    } catch (error) {
+        showError("Failed to load congregations: " + error.message);
+    }
+}
+
+
+
+  
+  
+  function resetPublisher() {
+  // Reset publisher dropdown
+  elements.publisherFilter.value = "";
+  elements.checkedOutDisplay.style.display = "none";
+  
+  // Clear any checked-out territories display
+  elements.checkedOutTableContainer.innerHTML = "";
+}
+
+function handleResFilterChange() {
+  if (!elements.resFilter.value) return
+
+  // If we're in subdivided mode, repopulate when type changes
+  if (elements.mapTypeFilter.value === "subdivided" && elements.congFilter.value) {
+    populateSubdividedFilter()
+  } else {
+    fetchData()
+  }
+}
+
+  function handleMapTypeChange() {
+    const mapType = elements.mapTypeFilter.value
+
+    if (mapType === "subdivided") {
+      elements.subdividedControls.style.display = "block"
+      elements.subdividedMessage.style.display = "none"
+      elements.dataDisplay.style.display = "none"
+
+      // Only try to populate if we have congregation and type selected
+      if (elements.congFilter.value && elements.resFilter.value) {
+        populateSubdividedFilter()
+      }
+    } else {
+      elements.subdividedControls.style.display = "none"
+      elements.subdividedMessage.style.display = "none"
+
+      // Automatically fetch data if congregation and res/business are already selected
+      if (elements.congFilter.value && elements.resFilter.value) {
+        fetchData()
+      } else {
+        elements.dataDisplay.style.display = "none"
+      }
+    }
+  }
+
+  function handleSubdividedFilterChange() {
+    if (elements.subdividedFilter.value) {
+      fetchSubdividedData()
+    }
+  }
+
+  async function populateSubdividedFilter() {
+    const congFilter = elements.congFilter.value
+    const resFilter = elements.resFilter.value
+
+    if (!congFilter || !resFilter) return
+
+    toggleLoading(true)
+    elements.subdividedFilter.innerHTML =
+      '<option value="">-- Select --</option>'
+
+    try {
+      // First get all territory numbers that have both full and subdivided entries
       const { data, error } = await supabase
-        .from('mombasa')
-        .select('*');
+        .from(config.tableName)
+        .select("ter_no, ter_name, is_full")
+        .eq("cong_name", congFilter)
+        .eq("is_res", resFilter)
+        .order("ter_no", { ascending: true })
+
+      if (error) throw error
+
+      // Group by territory number
+      const territoryGroups = {}
+      data.forEach((item) => {
+        if (!territoryGroups[item.ter_no]) {
+          territoryGroups[item.ter_no] = []
+        }
+        territoryGroups[item.ter_no].push(item)
+      })
+
+      // Filter for numbers that have both full and subdivided entries
+      const validTerritories = Object.keys(territoryGroups).filter((terNo) => {
+        const items = territoryGroups[terNo]
+        return (
+          items.some((i) => i.is_full === true) &&
+          items.some((i) => i.is_full === false)
+        )
+      })
+
+      // Add options to the dropdown
+      validTerritories.forEach((terNo) => {
+        // Find the full map record to get the name
+        const fullRecord = territoryGroups[terNo].find(
+          (i) => i.is_full === true,
+        )
+        const option = document.createElement("option")
+        option.value = terNo
+        option.textContent = `${terNo} - ${fullRecord.ter_name || "No Name"}`
+        elements.subdividedFilter.appendChild(option)
+      })
+    } catch (error) {
+      showError("Error loading subdivided maps: " + error.message)
+    } finally {
+      toggleLoading(false)
+    }
+  }
+
+  // Debounce function for input handlers
+  function debounce(func, wait) {
+    let timeout
+    return function (...args) {
+      clearTimeout(timeout)
+      timeout = setTimeout(() => func.apply(this, args), wait)
+    }
+  }
+
+  // Initialize the data
+  init()
+
+async function init() {
+  try {
+    await populateCongFilter()
+    // Enable residential filter by default
+    elements.resFilter.disabled = false
+  } catch (error) {
+    showError("Failed to initialize: " + error.message)
+  }
+}
+
+function handleCongregationChange() {
+  resetPublisher();
+  elements.resFilter.disabled = !elements.congFilter.value;
+
+  if (elements.congFilter.value) {
+    // Default to Residential (true) if empty
+    if (elements.resFilter.value === "") {
+      elements.resFilter.value = "true";
+    }
+
+    if (elements.mapTypeFilter.value === "subdivided") {
+      populateSubdividedFilter();
+    } else {
+      fetchData();
+    }
+  } else {
+    elements.resFilter.value = "";
+    elements.dataDisplay.style.display = "none";
+  }
+}
+
+  function showError(message, duration = 0) {
+    elements.errorMessage.textContent = message
+    elements.errorMessage.style.display = "block"
+    elements.successMessage.style.display = "none"
+
+    if (duration > 0) {
+      setTimeout(() => {
+        elements.errorMessage.style.display = "none"
+      }, duration)
+    }
+  }
+
+  function showSuccess(message, duration = 3000) {
+    elements.successMessage.textContent = message
+    elements.successMessage.style.display = "block"
+    elements.errorMessage.style.display = "none"
+
+    if (duration > 0) {
+      setTimeout(() => {
+        elements.successMessage.style.display = "none"
+      }, duration)
+    }
+  }
+
+  function clearMessages() {
+    elements.errorMessage.style.display = "none"
+    elements.successMessage.style.display = "none"
+  }
+
+  function toggleLoading(show) {
+    elements.loadingIndicator.style.display = show ? "flex" : "none"
+  }
+
+  // Date handling functions
+  function formatDate(dateString) {
+    if (!dateString) return ""
+
+    try {
+      const date = new Date(dateString)
+      if (isNaN(date.getTime())) return ""
+
+      const day = date.getDate().toString().padStart(2, "0")
+      const month = (date.getMonth() + 1).toString().padStart(2, "0")
+      const year = date.getFullYear().toString().slice(-2)
+
+      return `${day}/${month}/${year}`
+    } catch (e) {
+      console.error("Error formatting date:", e)
+      return ""
+    }
+  }
+
+  function parseDate(dateString) {
+    if (!dateString) return null
+
+    // Handle format DD/MM/YY
+    const dateParts = dateString.split("/")
+    if (dateParts.length === 3) {
+      const day = parseInt(dateParts[0], 10)
+      const month = parseInt(dateParts[1], 10) - 1
+      let year = parseInt(dateParts[2], 10)
+
+      // Convert 2-digit year to 4-digit
+      if (year < 100) {
+        year = year + (year >= 50 ? 1900 : 2000)
+      }
+
+      const date = new Date(year, month, day)
+      // Validate the date is valid
+      if (
+        date.getDate() === day &&
+        date.getMonth() === month &&
+        date.getFullYear() === year
+      ) {
+        return date.toISOString()
+      }
+      return null
+    }
+
+    // Try standard date parsing
+    try {
+      const date = new Date(dateString)
+      return isNaN(date.getTime()) ? null : date.toISOString()
+    } catch (e) {
+      console.error("Error parsing date:", e)
+      return null
+    }
+  }
+
+  // CRUD Operations
+  async function updateDate(rowId, column, newDate) {
+    clearMessages()
+
+    try {
+      const dateIso = parseDate(newDate)
+      if (!dateIso && newDate) {
+        showError("Invalid date format. Please use DD/MM/YY.")
+        return null
+      }
+
+      const updateData = {}
+      updateData[column] = dateIso
+
+      const { data, error } = await supabase
+        .from(config.tableName)
+        .update(updateData)
+        .eq("id", rowId)
+        .select()
 
       if (error) {
-        document.getElementById('output').textContent = 'Error: ' + error.message;
+        showError("Error updating date: " + error.message)
+        return null
+      }
+
+      showSuccess("Date updated successfully!")
+      return dateIso ? formatDate(dateIso) : ""
+    } catch (e) {
+      showError("Error: " + e.message)
+      return null
+    }
+  }
+
+  async function updateCellValue(rowId, column, newValue) {
+    clearMessages()
+
+    try {
+      const updateData = {}
+      updateData[column] = newValue || null
+
+      const { data, error } = await supabase
+        .from(config.tableName)
+        .update(updateData)
+        .eq("id", rowId)
+        .select()
+
+      if (error) {
+        showError("Error updating value: " + error.message)
+        return false
+      }
+
+      showSuccess("Updated successfully!")
+      return true
+    } catch (e) {
+      showError("Error: " + e.message)
+      return false
+    }
+  }
+
+  // UI Component Creation
+  function createEditableInput(cell, currentValue) {
+    const input = document.createElement("input")
+    input.type = "text"
+    input.maxLength = 20
+    input.value = currentValue || ""
+    input.setAttribute("aria-label", `Edit ${cell.getAttribute("data-column")}`)
+
+    cell.innerHTML = ""
+    cell.appendChild(input)
+    input.focus()
+
+    const saveValue = async () => {
+      const newValue = input.value.trim()
+      const rowId = cell.getAttribute("data-row-id")
+      const column = cell.getAttribute("data-column")
+
+      if (newValue !== currentValue) {
+        const success = await updateCellValue(rowId, column, newValue)
+        if (success) {
+          cell.textContent = newValue
+        } else {
+          cell.textContent = currentValue
+        }
       } else {
-        document.getElementById('output').textContent = JSON.stringify(data, null, 2);
+        cell.textContent = currentValue
       }
     }
 
-    loadData();
-  </script>
-</body>
-</html>
-';
-    const SUPABASE_ANON_KEY = 'YOUR_ANON_KEY_HERE';
+    input.addEventListener("blur", saveValue)
+    input.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") {
+        e.preventDefault()
+        saveValue()
+      } else if (e.key === "Escape") {
+        e.preventDefault()
+        cell.textContent = currentValue
+      }
+    })
+  }
 
-    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  function createDatePicker(cell, currentValue) {
+    const datePicker = document.createElement("input")
+    datePicker.type = "date"
+    datePicker.className = "date-picker"
+    datePicker.setAttribute(
+      "aria-label",
+      `Edit date for ${cell.getAttribute("data-column")}`,
+    )
 
-    async function loadData() {
-      const { data, error } = await supabase
-        .from('mombasa')
-        .select('*');
-
-      if (error) {
-        document.getElementById('output').textContent = 'Error: ' + error.message;
-      } else {
-        document.getElementById('output').textContent = JSON.stringify(data, null, 2);
+    // Set current value if available
+    if (currentValue) {
+      try {
+        const [day, month, year] = currentValue.split("/")
+        const fullYear = `20${year}`
+        datePicker.value = `${fullYear}-${month}-${day}`
+      } catch (e) {
+        console.error("Error setting date picker value:", e)
       }
     }
 
-    loadData();
-  </script>
-</body>
-</html>
+    cell.innerHTML = ""
+    cell.appendChild(datePicker)
+    datePicker.focus()
+
+    const saveDate = async () => {
+      const selectedDate = datePicker.value
+      if (selectedDate) {
+        try {
+          const [year, month, day] = selectedDate.split("-")
+          const shortYear = year.slice(-2)
+          const formattedDate = `${day}/${month}/${shortYear}`
+
+          const rowId = cell.getAttribute("data-row-id")
+          const column = cell.getAttribute("data-column")
+
+          const updatedDate = await updateDate(rowId, column, formattedDate)
+          cell.textContent = updatedDate !== null ? updatedDate : currentValue
+        } catch (e) {
+          console.error("Error saving date:", e)
+          cell.textContent = currentValue
+        }
+      } else {
+        // Handle case where date was cleared
+        const rowId = cell.getAttribute("data-row-id")
+        const column = cell.getAttribute("data-column")
+        await updateDate(rowId, column, null)
+        cell.textContent = ""
+      }
+    }
+
+    datePicker.addEventListener("change", saveDate)
+    datePicker.addEventListener("blur", function () {
+      if (!datePicker.value) {
+        saveDate()
+      }
+    })
+
+    datePicker.addEventListener("keydown", function (e) {
+      if (e.key === "Escape") {
+        e.preventDefault()
+        cell.textContent = currentValue
+      } else if (e.key === "Enter") {
+        e.preventDefault()
+        saveDate()
+      }
+    })
+  }
+
+  async function fetchSubdividedData() {
+    const congFilter = elements.congFilter.value
+    const resFilter = elements.resFilter.value
+    const parentMap = elements.subdividedFilter.value
+
+    if (!congFilter || !resFilter || !parentMap) {
+      showError("Please select all required filters")
+      return
+    }
+
+    toggleLoading(true)
+    elements.subdividedMessage.style.display = "none"
+
+    try {
+      // Get both the parent map and its subdivisions
+      const { data, error } = await supabase
+        .from(config.tableName)
+        .select("*")
+        .eq("cong_name", congFilter)
+        .eq("is_res", resFilter)
+        .eq("ter_no", parentMap)
+        .order("is_full", { ascending: false }) // Parent map first (is_full = true)
+        .order("ter_name", { ascending: true }) // Then subdivisions alphabetically
+
+      if (error) throw error
+
+      if (!data || data.length === 0) {
+        showError("No data found for the selected map")
+        return
+      }
+
+      renderSubdividedTable(data, congFilter, resFilter, parentMap)
+    } catch (error) {
+      showError("Error loading subdivided maps: " + error.message)
+    } finally {
+      toggleLoading(false)
+    }
+  }
+
+ async function fetchData() {
+  const congFilter = elements.congFilter.value;
+  const resFilter = elements.resFilter.value; // This will be "true" or "false"
+  const mapTypeFilter = elements.mapTypeFilter.value;
+
+  clearMessages();
+
+  if (!congFilter) {
+    showError("Please select a congregation first");
+    return;
+  }
+
+  if (!resFilter) {
+    showError("Please select Residential or Business");
+    return;
+  }
+
+  // Handle subdivided maps selection
+  if (mapTypeFilter === "subdivided") {
+    const parentMap = elements.subdividedFilter.value;
+    if (!parentMap) {
+      showError("Please select a parent map");
+      return;
+    }
+    fetchSubdividedData();
+    return;
+  }
+
+  toggleLoading(true);
+
+  try {
+    const { data, error } = await supabase
+      .from(config.tableName)
+      .select("*")
+      .eq("cong_name", congFilter)
+      .eq("is_res", resFilter === "true") // Convert string to boolean
+      .eq("is_full", true)
+      .order("ter_no", { ascending: true });
+
+    if (error) throw error;
+
+    renderTable(data, congFilter, resFilter === "true");
+  } catch (e) {
+    showError("An unexpected error occurred: " + e.message);
+  } finally {
+    toggleLoading(false);
+  }
+}
+  function renderSubdividedTable(data, congFilter, resFilter, parentMap) {
+    elements.tableContainer.innerHTML = ""
+
+
+
+    // Find the parent map (is_full = true)
+    const parentMapData = data.find((item) => item.is_full === true)
+    const subdivisions = data.filter((item) => item.is_full === false)
+
+    elements.resultsHeader.textContent = `${congFilter} ${resFilter === "yes" ? "Residential" : "Business"} ${parentMap}`
+
+    elements.dataDisplay.style.display = "block"
+
+    const table = document.createElement("table")
+    table.setAttribute("role", "grid")
+    table.setAttribute("aria-label", "Subdivided territory data")
+
+    const tableHead = document.createElement("thead")
+    const headerRow = document.createElement("tr")
+
+    // Add headers in specified order with display names
+// Add headers in specified order with display names
+columnOrder.forEach((key) => {
+  if (!excludedColumns.includes(key)) {
+    const th = document.createElement("th");
+    th.textContent = columnDisplayNames[key] || key;
+    th.setAttribute("scope", "col");
+
+    // Add specific classes based on column type
+    if (key === "ter_no") {
+      th.classList.add("ter-no-header");
+    } else if (key === "ter_name") {
+      th.classList.add("ter-name-header");
+
+    } else if (key === "ter_desc") {
+      th.classList.add("ter-desc-header");
+
+    } else if (dateColumns.includes(key)) {
+      th.classList.add("date-cell-header");
+    } else if (editableColumns.includes(key)) {
+      th.classList.add("editable-header");
+    }
+    
+    headerRow.appendChild(th);
+  }
+});
+
+    tableHead.appendChild(headerRow)
+    table.appendChild(tableHead)
+
+    const tableBody = document.createElement("tbody")
+
+    // First add the parent map row
+    if (parentMapData) {
+      const tr = createTableRow(parentMapData)
+      tr.classList.add("parent-map-row")
+      tableBody.appendChild(tr)
+    }
+
+    subdivisions
+      .sort((a, b) => {
+        const aName = a.ter_name || ""
+        const bName = b.ter_name || ""
+        const aDesc = a.ter_desc || ""
+        const bDesc = b.ter_desc || ""
+
+        // If both have names, sort by name
+        if (aName && bName) {
+          return aName.localeCompare(bName)
+        }
+        // If one has a name, it comes first
+        else if (aName) {
+          return -1
+        } else if (bName) {
+          return 1
+        }
+        // If no names, try sorting by description
+        else if (aDesc || bDesc) {
+          return aDesc.localeCompare(bDesc)
+        }
+        // If both name and desc are blank, retain original order
+        else {
+          return 0
+        }
+      })
+      .forEach((row) => {
+        const tr = createTableRow(row)
+        tr.classList.add("subdivided-map-row")
+        tableBody.appendChild(tr)
+      })
+
+    table.appendChild(tableBody)
+    elements.tableContainer.appendChild(table)
+
+    // Show name and description columns by default for subdivided maps
+    toggleDescriptions(table)
+  }
+
+  function createTableRow(row) {
+    const tr = document.createElement("tr")
+   
+
+    // Add cells in specified order
+    columnOrder.forEach((key) => {
+      if (!excludedColumns.includes(key)) {
+        const td = document.createElement("td")
+
+        if (editableColumns.includes(key)) {
+          td.classList.add("editable-cell")
+          td.setAttribute("data-column", key)
+          td.setAttribute("data-row-id", row.id)
+          td.setAttribute(
+            "aria-label",
+            `${columnDisplayNames[key] || key}: ${row[key] || ""}`,
+          )
+          td.setAttribute("role", "gridcell")
+          td.setAttribute("tabindex", "0")
+          td.textContent = row[key] || ""
+
+          td.addEventListener("click", function (e) {
+            if (e.target.tagName === "INPUT") return
+            createEditableInput(td, td.textContent)
+          })
+
+          td.addEventListener("keydown", function (e) {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault()
+              createEditableInput(td, td.textContent)
+            }
+          })
+        } else if (dateColumns.includes(key)) {
+          td.classList.add("date-cell")
+          td.setAttribute("data-column", key)
+          td.setAttribute("data-row-id", row.id)
+          td.setAttribute(
+            "aria-label",
+            `${columnDisplayNames[key] || key}: ${formatDate(row[key])}`,
+          )
+          td.setAttribute("role", "gridcell")
+          td.setAttribute("tabindex", "0")
+          td.textContent = formatDate(row[key])
+
+          td.addEventListener("click", function (e) {
+            if (e.target.tagName === "INPUT") return
+            createDatePicker(td, td.textContent)
+          })
+
+          td.addEventListener("keydown", function (e) {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault()
+              createDatePicker(td, td.textContent)
+            }
+          })
+        } else if (key === "ter_no") {
+          td.classList.add("ter-no-cell")
+          td.textContent = row[key] || ""
+          td.setAttribute(
+            "aria-label",
+            `Territory Number ${row[key] || ""}, click to show details`,
+          )
+          td.setAttribute("role", "button")
+          td.setAttribute("tabindex", "0")
+
+          td.addEventListener("click", function () {
+            toggleDescriptions(td.closest("table"))
+          })
+
+          td.addEventListener("keydown", function (e) {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault()
+              toggleDescriptions(td.closest("table"))
+            }
+          })
+        } else if (key === "ter_name") {
+          td.classList.add("ter-name-cell")
+
+          td.textContent = row[key] || ""
+        } else if (key === "ter_desc") {
+          td.classList.add("ter-desc-cell")
+
+          td.textContent = row[key] || ""
+        } else {
+          td.textContent = row[key] || ""
+        }
+
+        tr.appendChild(td)
+      }
+    })
+
+    return tr
+  }
+  
+  function toggleDescriptions(table) {
+    const nameHeaders = table.querySelectorAll('.ter-name-header');
+    const nameCells = table.querySelectorAll('.ter-name-cell');
+    const descHeaders = table.querySelectorAll('.ter-desc-header');
+    const descCells = table.querySelectorAll('.ter-desc-cell');
+    
+    const isVisible = descCells.length > 0 && descCells[0].style.display !== 'none';
+    
+    nameHeaders.forEach(th => {
+      th.style.display = isVisible ? 'none' : 'table-cell';
+    });
+    nameCells.forEach(td => {
+      td.style.display = isVisible ? 'none' : 'table-cell';
+    });
+    descHeaders.forEach(th => {
+      th.style.display = isVisible ? 'none' : 'table-cell';
+    });
+    descCells.forEach(td => {
+      td.style.display = isVisible ? 'none' : 'table-cell';
+    });
+    
+    // Update accessibility attributes
+    const buttonText = isVisible ? 'Show territory details' : 'Hide territory details';
+    table.querySelectorAll('.ter-no-cell').forEach(cell => {
+      cell.setAttribute('aria-expanded', !isVisible);
+      cell.setAttribute('aria-label', `Territory Number ${cell.textContent}, click to ${isVisible ? 'show' : 'hide'} details`);
+    });
+  }
+
+  function renderTable(data, congFilter, resFilter) {
+    elements.tableContainer.innerHTML = "";
+
+    if (!data || data.length === 0) {
+        elements.resultsHeader.textContent = "No records found for this selection";
+        elements.dataDisplay.style.display = "block";
+        return;
+    }
+
+    elements.resultsHeader.textContent = `${congFilter} ${resFilter === true ? "Residential" : "Business"}`;
+
+    elements.dataDisplay.style.display = "block";
+
+    const table = document.createElement("table");
+    table.setAttribute("role", "grid");
+    table.setAttribute("aria-label", "Territory data");
+
+    const tableHead = document.createElement("thead");
+    const headerRow = document.createElement("tr");
+
+    // Add headers in specified order with display names
+    columnOrder.forEach((key) => {
+        if (!excludedColumns.includes(key)) {
+            const th = document.createElement("th");
+            th.textContent = columnDisplayNames[key] || key;
+            th.setAttribute("scope", "col");
+
+            // Add specific classes based on column type
+            if (key === "ter_no") {
+                th.classList.add("ter-no-header");
+            } else if (key === "ter_name") {
+                th.classList.add("ter-name-header");
+            } else if (key === "ter_desc") {
+                th.classList.add("ter-desc-header");
+            } else if (dateColumns.includes(key)) {
+                th.classList.add("date-cell-header");
+            } else if (editableColumns.includes(key)) {
+                th.classList.add("editable-header");
+            }
+            
+            headerRow.appendChild(th);
+        }
+    });
+
+    tableHead.appendChild(headerRow);
+    table.appendChild(tableHead);
+
+    const tableBody = document.createElement("tbody");
+
+    // Create table rows
+    data.forEach((row) => {
+        const tr = createTableRow(row);
+        tableBody.appendChild(tr);
+    });
+
+    table.appendChild(tableBody);
+    elements.tableContainer.appendChild(table);
+}
+
+ 
+
+  async function populateCongFilter() {
+    toggleLoading(true)
+
+    try {
+      const { data, error } = await supabase
+        .from(config.tableName)
+        .select("cong_name")
+        .order("cong_name", { ascending: true })
+
+      if (error) {
+        showError("Error fetching congregation data: " + error.message)
+        return
+      }
+
+      if (!Array.isArray(data) || data.length === 0) {
+        showError("No congregation data available")
+        return
+      }
+
+      elements.congFilter.innerHTML =
+        '<option value="">-- Congregation --</option>'
+
+      // Use a Set for uniqueness
+      const uniqueCongs = new Set()
+
+      // First pass: collect all congregation names
+      data.forEach((item) => {
+        if (item.cong_name) {
+          // Normalize by trimming whitespace and converting to lowercase
+          const normalized = item.cong_name.trim()
+          uniqueCongs.add(normalized)
+        }
+      })
+
+      // Sort and add to the dropdown
+      Array.from(uniqueCongs)
+        .sort((a, b) => a.localeCompare(b))
+        .forEach((cong) => {
+          const option = document.createElement("option")
+          option.value = cong
+          option.textContent = cong
+          elements.congFilter.appendChild(option)
+        })
+    } catch (e) {
+      showError("Failed to load congregation data: " + e.message)
+    } finally {
+      toggleLoading(false)
+    }
+  }
+  // New Functions
+async function populatePublisherFilter() {
+  try {
+    const { data, error } = await supabase
+      .from(config.tableName)
+      .select("slot1, slot2, slot3, slot4");
+
+    if (error) throw error;
+
+    const uniquePublishers = new Set();
+
+    // Collect all unique publisher names from all slots
+    data.forEach(row => {
+      if (row.slot1) uniquePublishers.add(row.slot1);
+      if (row.slot2) uniquePublishers.add(row.slot2);
+      if (row.slot3) uniquePublishers.add(row.slot3);
+      if (row.slot4) uniquePublishers.add(row.slot4);
+    });
+
+    // Clear and populate the dropdown
+    elements.publisherFilter.innerHTML = '<option value="">-- Assignee --</option>';
+    Array.from(uniquePublishers)
+      .sort()
+      .forEach(publisher => {
+        const option = document.createElement("option");
+        option.value = publisher;
+        option.textContent = publisher;
+        elements.publisherFilter.appendChild(option);
+      });
+  } catch (error) {
+    showError("Failed to load publishers: " + error.message);
+  }
+}
+
+async function handlePublisherFilterChange() {
+  const publisher = elements.publisherFilter.value;
+  
+    // Clear any existing displays first
+  elements.tableContainer.innerHTML = "";
+  elements.dataDisplay.style.display = "none";
+  elements.subdividedMessage.style.display = "none";
+  const congFilter = document.getElementById("cong-filter");
+congFilter.value = "";  
+
+  if (publisher) {
+    elements.secondaryFilters.style.display = "none";
+    elements.subdividedControls.style.display = "none";
+    document.getElementById("res-filter").value = "true";
+    document.getElementById("map-type-filter").value = "full"; 
+    document.getElementById("subdivided-filter").value = "";
+  }
+  
+  
+  if (!publisher) {
+    elements.checkedOutDisplay.style.display = "none";
+    return;
+  }
+
+  toggleLoading(true);
+  try {
+    // Get all territories where this publisher has a slot checked out
+    const { data, error } = await supabase
+      .from(config.tableName)
+      .select("*")
+      .or(
+        `and(slot1.eq.${publisher},slot1_out.not.is.null,slot1_ret.is.null),` +
+        `and(slot2.eq.${publisher},slot2_out.not.is.null,slot2_ret.is.null),` +
+        `and(slot3.eq.${publisher},slot3_out.not.is.null,slot3_ret.is.null),` +
+        `and(slot4.eq.${publisher},slot4_out.not.is.null,slot4_ret.is.null)`
+      );
+
+    if (error) throw error;
+
+    renderCheckedOutTable(data, publisher);
+  } catch (error) {
+    showError("Error loading checked out territories: " + error.message);
+  } finally {
+    toggleLoading(false);
+  }
+}
+
+function renderCheckedOutTable(data, publisher) {
+  elements.checkedOutTableContainer.innerHTML = "";
+  
+  if (!data || data.length === 0) {
+    elements.checkedOutHeader.textContent = `${publisher} has no territories checked out`;
+    elements.checkedOutDisplay.style.display = "block";
+    return;
+  }
+
+  elements.checkedOutHeader.textContent = `Territories checked out to ${publisher}`;
+  elements.checkedOutDisplay.style.display = "block";
+
+  const table = document.createElement("table");
+  table.setAttribute("role", "grid");
+  table.setAttribute("aria-label", "Checked out territories");
+
+  // Create table header - ADDED "Cong." AS FIRST COLUMN
+  const thead = document.createElement("thead");
+  const headerRow = document.createElement("tr");
+  
+  ["Cong.", "#", "Terr.", "Type", "Name", "Desc.", "Date", "Action"].forEach(headerText => {
+    const th = document.createElement("th");
+    th.textContent = headerText;
+    th.classList.add("checked-out-header");
+    headerRow.appendChild(th);
+  });
+  
+  thead.appendChild(headerRow);
+  table.appendChild(thead);
+
+  // Create table body
+  const tbody = document.createElement("tbody");
+
+  data.forEach(row => {
+    const tr = document.createElement("tr");
+    
+    // Determine which slot this publisher is using
+    let slotNumber = 1;
+    if (row.slot2 === publisher && row.slot2_out && !row.slot2_ret) slotNumber = 2;
+    else if (row.slot3 === publisher && row.slot3_out && !row.slot3_ret) slotNumber = 3;
+    else if (row.slot4 === publisher && row.slot4_out && !row.slot4_ret) slotNumber = 4;
+
+    // ADDED Congregation Name as first column
+    const tdCong = document.createElement("td");
+    tdCong.textContent = row.cong_name || "";
+    tdCong.classList.add("checked-out-cong-name");
+    tr.appendChild(tdCong);
+
+    // Territory Number
+    const tdNo = document.createElement("td");
+    tdNo.textContent = row.ter_no;
+    tdNo.classList.add("checked-out-ter-no");
+    tr.appendChild(tdNo);
+
+    // Territory Type (Res/Biz)
+    const tdType = document.createElement("td");
+    tdType.textContent = row.is_res ? "Res" : "Biz";
+    tdType.classList.add("checked-out-ter-type");
+    tr.appendChild(tdType);
+
+    // Map Type (Full/Sub)
+    const tdMapType = document.createElement("td");
+    tdMapType.textContent = row.is_full ? "Full Map" : "Sub";
+    tdMapType.classList.add("checked-out-ter-type");
+    tr.appendChild(tdMapType);
+
+    // Territory Name
+    const tdName = document.createElement("td");
+    tdName.textContent = row.ter_name || "";
+    tdName.classList.add("checked-out-ter-name");
+    tr.appendChild(tdName);
+
+    // Territory Description
+    const tdDesc = document.createElement("td");
+    tdDesc.textContent = row.ter_desc || "";
+    tdDesc.classList.add("checked-out-ter-desc");
+    tr.appendChild(tdDesc);
+
+    // Date Out
+    const tdDate = document.createElement("td");
+    tdDate.textContent = formatDate(row[`slot${slotNumber}_out`]);
+    tdDate.classList.add("checked-out-date");
+    tr.appendChild(tdDate);
+
+    // Return Button
+    const tdAction = document.createElement("td");
+    const returnBtn = document.createElement("button");
+    returnBtn.textContent = "RETURN";
+    returnBtn.classList.add("checked-out-return-btn");
+    returnBtn.addEventListener("click", () => handleReturnTerritory(row.id, slotNumber, tr));
+    tdAction.appendChild(returnBtn);
+    tr.appendChild(tdAction);
+
+    tbody.appendChild(tr);
+  });
+
+  table.appendChild(tbody);
+  elements.checkedOutTableContainer.appendChild(table);
+}
+
+async function handleReturnTerritory(rowId, slotNumber, rowElement) {
+  const today = new Date();
+  const formattedDate = formatDate(today.toISOString());
+  
+  try {
+    const updateData = {};
+    updateData[`slot${slotNumber}_ret`] = today.toISOString();
+
+    const { error } = await supabase
+      .from(config.tableName)
+      .update(updateData)
+      .eq("id", rowId);
+
+    if (error) throw error;
+
+    // Remove the row from the display
+    rowElement.remove();
+    
+    // Show success message
+    showSuccess("Territory marked as returned!");
+    
+    // Check if table is now empty
+    const remainingRows = elements.checkedOutTableContainer.querySelectorAll("tbody tr");
+    if (remainingRows.length === 0) {
+      elements.checkedOutDisplay.style.display = "none";
+    }
+  } catch (error) {
+    showError("Failed to update territory: " + error.message);
+  }
+}
+
+// Call this function when your page loads, after your existing init()
+populatePublisherFilter();
+</script>
